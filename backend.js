@@ -1,7 +1,8 @@
 const express = require('express');
 const app = express();
 const port = 5000;
-
+const cors = require('cors');
+app.use(cors());
 app.use(express.json());
 
 
@@ -82,23 +83,51 @@ app.get('/users/:id', (req, res) => {
 app.post('/users', (req, res) => {
     const userToAdd = req.body;
     console.log(req);
+    if (userToAdd.id == undefined) {
+        generateId(userToAdd);
+    }
+    console.log(`id: ${userToAdd.id}`);
     addUser(userToAdd);
-    res.status(200).end();
+    res.status(201).send(userToAdd).end();
 });
-app.delete('/users', (req, res) => {
-    const userToDelete = req.body;
-    console.log(req);
+app.delete('/users/:id', (req, res) => {
+    let userToDelete = req.params['id'];
+    console.log(`${userToDelete}`);
     deleteUser(userToDelete);
-    res.status(200).end();
+    res.status(204).end();
 });
 function addUser(user) {
     users['users_list'].push(user);
-}s
+}
 function deleteUser(u) {
-    let id = u.id;
-    let index = users['users_list'].findIndex((user) => user.id === u.id);
-    console.log(`Index of user: ${index}`)
-    delete users['users_list'][index];
+    users['users_list'] = users['users_list'].filter((user) => user.id != u);
+    console.log(`${u}`);
+
+}
+function generateId(user) {
+    let str = "";
+    let c = '';
+    let n = 0;
+    while (true) {
+        for (let i = 0; i < 6; i++) {
+            if (i > 2) {
+                n = Math.floor(Math.random() * 10);
+                str = str + n;
+            }
+            if (i <= 2) {
+                c = String.fromCharCode(97 + Math.floor(Math.random() * 26));
+                str = str + c;
+            }
+            console.log(str);
+        }
+
+        if (findUserById(str) == undefined) {
+            break;
+        }
+    }
+
+    user.id = str;
+    return user;
 }
 function findUserById(id) {
     return users['users_list'].find((user) => user['id'] === id);
@@ -115,3 +144,4 @@ const findUserByNameAndJob = (name, job) => {
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
 });
+
